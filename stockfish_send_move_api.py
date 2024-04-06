@@ -1,16 +1,30 @@
 import stockfish
 import chess
+import chess.engine
 import requests
 
+from send_move_api import url, send_moves
 
 board = chess.Board()
 engine = chess.engine.SimpleEngine.popen_uci("/app/stockfish/stockfish-ubuntu-x86-64-avx2")
 
+# testing for 3 move
+count = 0
 while not board.is_game_over():
     result = engine.play(board, chess.engine.Limit(time=0.1))
-    print(result.move)
+    # result.move type is <class 'chess.Move'>
+    # print(type(result.move.uci()))
+    print(f"Selected move from stockfish {result.move.uci()}")
     board.push(result.move)
+    send_moves(result.move.uci(), url)
 
+    # test
+    count+=1
+    if count == 3:
+        break
+
+
+# optional
 if board.is_checkmate():
     if board.turn == chess.WHITE:
         print("Black wins by checkmate!")
