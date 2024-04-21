@@ -16,6 +16,6 @@ def generate_prompt(moves:str):
     if(len(temp) <= 4):
         prev = "NONE"
 
-    return f"In a paragraph, explain the rationale behind the last move, where all previous moves are - previous moves : {prev}, last move : {temp[-4:]}."
+    return f"In a paragraph, explain the rationale behind the last move, where all previous moves are - previous moves : {prev.strip()}, last move : {temp[-4:]}."
 
 # print(generate_prompt("Nf3 "))
