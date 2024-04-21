@@ -23,7 +23,7 @@ engine = chess.engine.SimpleEngine.popen_uci("./stockfish/stockfish-ubuntu-x86-6
 rec_moves = ""
 
 # utils
-from utils import render_move_text, generate_prompt
+from utils import render_move_text, generate_prompt, prepare
 
 def convert_svg_to_png(svg_file, png_file):
     with open(svg_file, "rb") as f:
@@ -125,7 +125,7 @@ class ChessBoard(tk.Tk):
         self.after(500, lambda: self._get_explanation_and_update(user_text))
 
     def _get_explanation_and_update(self, user_text):
-        explanation = send_prompt(user_text, url_prompt)
+        explanation = send_prompt(prepare(user_text, rec_moves), url_prompt)
         self.generated_text_box.insert(tk.END, f"ASSISTANT : {explanation}" + "\n")
 
     # def get_explanation(self):
