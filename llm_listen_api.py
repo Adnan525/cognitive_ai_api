@@ -6,9 +6,9 @@ from llm_model import get_explanantion
 
 all_moves = ""
 
-app = Flask(__name__)
+llm_listen_app = Flask(__name__)
 
-@app.route('/rl_move', methods=['POST'])
+@llm_listen_app.route('/rl_move', methods=['POST'])
 def get_move():
     global all_moves
     
@@ -26,5 +26,5 @@ def get_move():
     print("========================================")
     return "", 200
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# if __name__ == '__main__':
+#     llm_listen_app.run(debug=True)

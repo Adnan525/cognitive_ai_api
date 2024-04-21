@@ -3,6 +3,22 @@ from PIL import Image, ImageTk
 import cairosvg
 from MyChess import MyChess
 
+from chess_engine_api import send_move
+
+# RL engine
+import chess
+import chess.engine
+
+# asynch api
+import asyncio
+import threading
+
+# llm listen
+from llm_listen_api import llm_listen_app
+
+board = chess.Board()
+engine = chess.engine.SimpleEngine.popen_uci("./stockfish/stockfish-ubuntu-x86-64-avx2")
+
 
 def convert_svg_to_png(svg_file, png_file):  # Tkinter not working with svg
     with open(svg_file, "rb") as f:
@@ -72,13 +88,19 @@ class ChessBoard(tk.Tk):
 
         self.explanation_button = tk.Button(self, text="Get Explanation", command=self.get_explanation)
         self.explanation_button.grid(row=3, column=1, sticky="ew")
+
+    def run_flask_app(self):
+        llm_listen_app.run()
         
     def start_game(self):
-        # Start the game logic here
-        pass
+        # Create a thread to run the Flask app
+        self.flask_thread = threading.Thread(target=self.run_flask_app)
+        self.flask_thread.start()
+        self.start_button.config(state=tk.DISABLED)
 
     def play_next_move(self):
         # Play the next move logic here
+        send_move(board, engine)
         pass
 
     def generate_prompt(self):
@@ -88,10 +110,10 @@ class ChessBoard(tk.Tk):
     def get_explanation(self):
         # Get explanation logic here
         previous_move = self.state.moves.split()[-1]
-        explanation = send_moves(previous_move, "http://127.0.0.1:5000/rl_move")  # Assuming this function sends the move to LLM and returns the explanation
+        # explanation = send_moves(previous_move, "http://127.0.0.1:5000/rl_move")  # Assuming this function sends the move to LLM and returns the explanation
 
 
 if __name__ == "__main__":
     moves = "d4 Nf6 c4 c5 e3 cxd4 exd4 d5 Nf3"
-    app = ChessBoard(MyChess(moves))
-    app.mainloop()
+    gui_app = ChessBoard(MyChess(moves))
+    gui_app.mainloop()
