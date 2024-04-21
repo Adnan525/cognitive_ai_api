@@ -6,7 +6,7 @@ import requests
 from send_move_api import url, send_moves
 
 board = chess.Board()
-engine = chess.engine.SimpleEngine.popen_uci("/app/stockfish/stockfish-ubuntu-x86-64-avx2")
+engine = chess.engine.SimpleEngine.popen_uci("./stockfish/stockfish-ubuntu-x86-64-avx2")
 
 # testing for 3 move
 count = 0
