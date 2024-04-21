@@ -20,11 +20,24 @@ def get_move():
         all_moves+=rl_move
     else:
         all_moves+=f" {rl_move}"
-    print("Generating explanation using LLM model")
-    print(get_explanantion(all_moves))
+    # print("Generating explanation using LLM model")
+    # print(get_explanantion(all_moves))
     print("Sending ack for next move")
     print("========================================")
     return "", 200
+
+@llm_listen_app.route("/get_exp", methods=['POST'])
+def get_prompt():
+    data = request.get_json()
+    prompt = data["prompt"]
+    print("========================================")
+    print(f"Received prompt : {prompt}")
+    print("Generating explanation using LLM model")
+    explanation_text = get_explanantion(prompt)
+    print(explanation_text)
+    print("Sending ack 200")
+    print("========================================")
+    return explanation_text, 200
 
 # if __name__ == '__main__':
 #     llm_listen_app.run(debug=True)

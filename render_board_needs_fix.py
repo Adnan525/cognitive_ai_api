@@ -4,6 +4,7 @@ import cairosvg
 from MyChess import MyChess
 
 from chess_engine_api import send_move
+from send_prompt_api import send_prompt, url_prompt
 
 # RL engine
 import chess
@@ -87,9 +88,11 @@ class ChessBoard(tk.Tk):
         self.prompt_button = tk.Button(self, text="Generate Prompt", command=self.generate_prompt)
         self.prompt_button.grid(row=3, column=0, sticky="ew")
 
-        self.explanation_button = tk.Button(self, text="Get Explanation", command=self.get_explanation)
+        self.explanation_button = tk.Button(self, text="Get Explanation", 
+                                            command= self.get_explanation_and_update_text)
         self.explanation_button.grid(row=3, column=1, sticky="ew")
 
+    
     def run_flask_app(self):
         llm_listen_app.run()
         
@@ -109,15 +112,31 @@ class ChessBoard(tk.Tk):
         # print(f"==========================>{rec_moves}")
 
     def generate_prompt(self):
-        # Generate prompt logic here
         self.user_input.delete('1.0', tk.END)
         self.user_input.insert(tk.END, generate_prompt(rec_moves))
-        pass
-    def get_explanation(self):
-        # Get explanation logic here
-        # previous_move = self.state.moves.split()[-1]
-        # explanation = send_moves(previous_move, "http://127.0.0.1:5000/rl_move")  # Assuming this function sends the move to LLM and returns the explanation
-        pass
+
+
+    def get_explanation_and_update_text(self):
+        # Update user text immediately
+        user_text = self.user_input.get("1.0", tk.END)
+        self.generated_text_box.insert(tk.END, f"USER : {user_text}" + "\n")
+
+        # schedule explanation retrieval after a short delay
+        self.after(500, lambda: self._get_explanation_and_update(user_text))
+
+    def _get_explanation_and_update(self, user_text):
+        explanation = send_prompt(user_text, url_prompt)
+        self.generated_text_box.insert(tk.END, f"ASSISTANT : {explanation}" + "\n")
+
+    # def get_explanation(self):
+    #     self.update_text()
+    #     user_text = self.user_input.get("1.0", tk.END)
+    #     explanation = send_prompt(user_text, url_prompt)
+    #     self.generated_text_box.insert(tk.END, f"ASSISTANT : {explanation}" + "\n")
+
+    # def update_text(self):
+    #     user_text = self.user_input.get("1.0", tk.END)
+    #     self.generated_text_box.insert(tk.END, f"USER : {user_text}" + "\n")
 
 if __name__ == "__main__":
     moves = ""
