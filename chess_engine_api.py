@@ -8,3 +8,4 @@ def send_move(board, engine):
     print(f"Selected move from stockfish {result.move.uci()}")
     board.push(result.move)
     send_moves(result.move.uci(), url)
+    return result.move.uci()

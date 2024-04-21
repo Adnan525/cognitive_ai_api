@@ -16,11 +16,15 @@ import threading
 # llm listen
 from llm_listen_api import llm_listen_app
 
+# global variables
 board = chess.Board()
 engine = chess.engine.SimpleEngine.popen_uci("./stockfish/stockfish-ubuntu-x86-64-avx2")
+rec_moves = ""
 
+# utils
+from utils import render_move_text, generate_prompt
 
-def convert_svg_to_png(svg_file, png_file):  # Tkinter not working with svg
+def convert_svg_to_png(svg_file, png_file):
     with open(svg_file, "rb") as f:
         svg_data = f.read()
     png_data = cairosvg.svg2png(bytestring=svg_data, output_width=300, output_height=300)
@@ -28,18 +32,8 @@ def convert_svg_to_png(svg_file, png_file):  # Tkinter not working with svg
         f.write(png_data)
 
 
-def render_move_text(moves: str):
-    moves_list = moves.split()
-    side = "White" if len(moves_list) % 2 == 1 else "White"
-    prevs = "\n"
-    for i, move in enumerate(moves_list[:-1]):
-        prevs += f"{move} "
-        if (i + 1) % 2 == 0:
-            prevs += "\n"
-    return f"Current move : {side, moves_list[-1]} \nPrevious moves : {prevs}"
-
-
 class ChessBoard(tk.Tk):
+
     def __init__(self, state: MyChess):
         super().__init__()
         self.title("Cognitive Chess")
@@ -55,10 +49,17 @@ class ChessBoard(tk.Tk):
         
         
     def create_widgets(self, state: MyChess):
+
+        global rec_moves
         
         # grid layout
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
+
+        # text box
+        self.generated_text_box = tk.Text(self, width=50, height=10, wrap=tk.WORD, pady=10, padx=10)
+        self.generated_text_box.grid(row=0, column = 0, sticky="nsew")
+
         
         # Chess Board Display
         self.canvas = tk.Canvas(self, width=self.image.width, height=self.image.height)
@@ -66,7 +67,7 @@ class ChessBoard(tk.Tk):
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
 
         # label
-        self.entry = tk.Label(self, text=render_move_text(state.moves),
+        self.entry = tk.Label(self, text=render_move_text(rec_moves),
                               justify="left", wraplength=400, anchor="ne", pady=80, padx = 20)
         self.entry.grid(row=1, column=1, sticky="nw")
 
@@ -93,27 +94,32 @@ class ChessBoard(tk.Tk):
         llm_listen_app.run()
         
     def start_game(self):
-        # Create a thread to run the Flask app
+        # creating a thread to run the Flask app, otherwise GUI will freeze
         self.flask_thread = threading.Thread(target=self.run_flask_app)
         self.flask_thread.start()
         self.start_button.config(state=tk.DISABLED)
 
+        self.generated_text_box.insert(tk.END, "------LLM API CONNECTED-------" + "\n")
+
     def play_next_move(self):
-        # Play the next move logic here
-        send_move(board, engine)
-        pass
+        global rec_moves
+        rec_moves += send_move(board, engine) + " "
+        # refresh the label text
+        self.entry.config(text=render_move_text(rec_moves))
+        # print(f"==========================>{rec_moves}")
 
     def generate_prompt(self):
         # Generate prompt logic here
         self.user_input.delete('1.0', tk.END)
-        self.user_input.insert(tk.END, "What is the rationale behind the previous move")
+        self.user_input.insert(tk.END, generate_prompt(rec_moves))
+        pass
     def get_explanation(self):
         # Get explanation logic here
-        previous_move = self.state.moves.split()[-1]
+        # previous_move = self.state.moves.split()[-1]
         # explanation = send_moves(previous_move, "http://127.0.0.1:5000/rl_move")  # Assuming this function sends the move to LLM and returns the explanation
-
+        pass
 
 if __name__ == "__main__":
-    moves = "d4 Nf6 c4 c5 e3 cxd4 exd4 d5 Nf3"
+    moves = ""
     gui_app = ChessBoard(MyChess(moves))
     gui_app.mainloop()
