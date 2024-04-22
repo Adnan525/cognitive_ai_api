@@ -19,7 +19,7 @@ from llm_listen_api import llm_listen_app
 
 # global variables
 board = chess.Board()
-stockfish_path = r"C:\Users\DELL\AppData\Local\miscApps\stockfish-windows-x86-64-avx2.exe"
+stockfish_path = "./stockfish/stockfish-ubuntu-x86-64-avx2"
 engine = chess.engine.SimpleEngine.popen_uci(stockfish_path)
 rec_moves = ""
 
@@ -29,7 +29,7 @@ from utils import render_move_text, generate_prompt, prepare
 def convert_svg_to_png(svg_file, png_file):
     with open(svg_file, "rb") as f:
         svg_data = f.read()
-    png_data = cairosvg.svg2png(bytestring=svg_data, output_width=300, output_height=300)
+    png_data = cairosvg.svg2png(bytestring=svg_data, output_width=300, output_height=275) #300 works
     with open(png_file, "wb") as f:
         f.write(png_data)
 

@@ -40,11 +40,6 @@ class ChessBoard(tk.Tk):
         self.title("Cognitive Chess")
         self.geometry("600x600")
         
-        # convert
-        convert_svg_to_png("board.svg", "board.png")
-        self.image = Image.open("board.png")
-        self.photo = ImageTk.PhotoImage(self.image)
-        
         # GUI Components
         self.create_widgets(state)
         
@@ -65,8 +60,10 @@ class ChessBoard(tk.Tk):
         self.generated_text_box.insert(tk.END, "------LLM API-------" + "\n")
         
         # Chess Board Display
+        self.load_image()
         self.canvas = tk.Canvas(self, width=self.image.width, height=self.image.height)
         self.canvas.grid(row=0, column=1, sticky="nw")
+        self.photo = ImageTk.PhotoImage(self.image)
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
 
         # # label
@@ -116,7 +113,10 @@ class ChessBoard(tk.Tk):
                                             command= self.get_explanation_and_update_text)
         self.explanation_button.grid(row=3, column=1, sticky="ew")
 
-    
+    def load_image(self):
+        convert_svg_to_png("board.svg", "board.png")
+        self.image = Image.open("board.png")
+
     def disable_click(self, event):
         return "break"
     
@@ -137,6 +137,11 @@ class ChessBoard(tk.Tk):
         # refresh the label text
         self.entry.delete("2.0", tk.END)
         self.entry.insert(tk.END, "\n"+render_move_text(rec_moves))
+        MyChess(rec_moves)
+        convert_svg_to_png("board.svg", "board.png")
+        self.load_image()
+        self.photo = ImageTk.PhotoImage(self.image)
+        self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
         # self.entry.config(text=render_move_text(rec_moves))
         # print(f"==========================>{rec_moves}")
 
@@ -169,5 +174,5 @@ class ChessBoard(tk.Tk):
 
 if __name__ == "__main__":
     moves = ""
-    gui_app = ChessBoard(MyChess(moves))
+    gui_app = ChessBoard(MyChess(rec_moves))
     gui_app.mainloop()
