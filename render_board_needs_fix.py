@@ -28,7 +28,7 @@ from utils import render_move_text, generate_prompt, prepare
 def convert_svg_to_png(svg_file, png_file):
     with open(svg_file, "rb") as f:
         svg_data = f.read()
-    png_data = cairosvg.svg2png(bytestring=svg_data, output_width=300, output_height=300)
+    png_data = cairosvg.svg2png(bytestring=svg_data, output_width=280, output_height=275)
     with open(png_file, "wb") as f:
         f.write(png_data)
 
@@ -60,23 +60,47 @@ class ChessBoard(tk.Tk):
         # text box
         self.generated_text_box = tk.Text(self, width=50, height=10, wrap=tk.WORD, pady=10, padx=10)
         self.generated_text_box.grid(row=0, column = 0, sticky="nsew")
-
+        self.generated_text_box.config(cursor="")
+        self.generated_text_box.bind("<Button-1>", self.disable_click)
+        self.generated_text_box.insert(tk.END, "------LLM API-------" + "\n")
         
         # Chess Board Display
         self.canvas = tk.Canvas(self, width=self.image.width, height=self.image.height)
         self.canvas.grid(row=0, column=1, sticky="nw")
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
 
-        # label
-        self.entry = tk.Label(self, text=render_move_text(rec_moves),
-                              justify="left", wraplength=400, anchor="ne", pady=80, padx = 20)
-        self.entry.grid(row=1, column=1, sticky="nw")
+        # # label
+        # self.entry = tk.Label(self, text=render_move_text(rec_moves),
+        #                       justify="left", wraplength=400, anchor="ne", pady=80, padx = 20)
+        # self.entry.grid(row=1, column=1, sticky="nw")
+
+        moves_frame = tk.Frame(self)
+        moves_frame.grid(row=1, column=1, sticky="nw")
+
+        # Label for chess moves inside the moves_frame
+        # moves_label = tk.Label(moves_frame, text="Chess Moves (Algebraic Form):")
+        # moves_label.grid(row=0, column=0, sticky="w")
+        
+        # Text widget for moves with a scrollbar inside the moves_frame
+        self.entry = tk.Text(moves_frame, wrap="word", width=35, height=15)
+        self.entry.grid(row=1, column=0, sticky="nw")
+        self.entry.insert(tk.END, "Chess Moves (Algebraic Form):")
+        self.entry.config(cursor="")
+        self.entry.bind("<Button-1>", self.disable_click)
+        
+        # Scrollbar for the text widget
+        self.scrollbar = tk.Scrollbar(moves_frame, orient="vertical", command=self.entry.yview)
+        self.scrollbar.grid(row=1, column=1, sticky="ns")
+        
+        # Configure text widget to use scrollbar
+        self.entry.config(yscrollcommand=self.scrollbar.set)
 
         # User Input Text Box
-        self.user_label = tk.Label(self, text="User:")
-        self.user_label.grid(row=1, column=0, sticky="nw")
-        self.user_input = tk.Text(self, width=50, height=13, pady=20)
+        # self.user_label = tk.Label(self, text="User Input:")
+        # self.user_label.grid(row=1, column=0, sticky="nw")
+        self.user_input = tk.Text(self, width=50, height=15)
         self.user_input.grid(row=1, column=0, sticky="sw")
+        self.user_input.insert(tk.END, "User Input:")
         
         # Buttons
         self.start_button = tk.Button(self, text="Start Game", command=self.start_game)
@@ -93,6 +117,9 @@ class ChessBoard(tk.Tk):
         self.explanation_button.grid(row=3, column=1, sticky="ew")
 
     
+    def disable_click(self, event):
+        return "break"
+    
     def run_flask_app(self):
         llm_listen_app.run()
         
@@ -108,17 +135,19 @@ class ChessBoard(tk.Tk):
         global rec_moves
         rec_moves += send_move(board, engine) + " "
         # refresh the label text
-        self.entry.config(text=render_move_text(rec_moves))
+        self.entry.delete("2.0", tk.END)
+        self.entry.insert(tk.END, "\n"+render_move_text(rec_moves))
+        # self.entry.config(text=render_move_text(rec_moves))
         # print(f"==========================>{rec_moves}")
 
     def generate_prompt(self):
-        self.user_input.delete('1.0', tk.END)
-        self.user_input.insert(tk.END, generate_prompt(rec_moves))
+        self.user_input.delete("2.0", tk.END)
+        self.user_input.insert(tk.END, "\n"+generate_prompt(rec_moves))
 
 
     def get_explanation_and_update_text(self):
         # Update user text immediately
-        user_text = self.user_input.get("1.0", tk.END)
+        user_text = self.user_input.get("2.0", tk.END)
         self.generated_text_box.insert(tk.END, f"USER : {user_text}" + "\n")
 
         # schedule explanation retrieval after a short delay

@@ -22,7 +22,10 @@ def generate_prompt(moves:str):
 def prepare(user_text, moves):
     prompt_for_display = generate_prompt(moves)
 
-    if user_text == prompt_for_display:
+    # print(f"user_text : {user_text}")
+    # print(f"prompt_for_display : {prompt_for_display}")
+    if user_text.strip() == prompt_for_display.strip():
+        # print("#########################################################")
         temp = moves.strip()
         prev = temp[:-4]
         last_move = temp[-4:]
