@@ -19,7 +19,7 @@ from llm_listen_api import llm_listen_app
 
 # global variables
 board = chess.Board()
-stockfish_path = "./stockfish/stockfish-ubuntu-x86-64-avx2"
+stockfish_path = r"C:\Users\DELL\AppData\Local\miscApps\stockfish-windows-x86-64-avx2.exe"
 engine = chess.engine.SimpleEngine.popen_uci(stockfish_path)
 rec_moves = ""
 
@@ -29,7 +29,7 @@ from utils import render_move_text, generate_prompt, prepare
 def convert_svg_to_png(svg_file, png_file):
     with open(svg_file, "rb") as f:
         svg_data = f.read()
-    png_data = cairosvg.svg2png(bytestring=svg_data, output_width=300, output_height=275) #300 works
+    png_data = cairosvg.svg2png(bytestring=svg_data, output_width=300, output_height=300)
     with open(png_file, "wb") as f:
         f.write(png_data)
 
@@ -40,11 +40,6 @@ class ChessBoard(tk.Tk):
         super().__init__()
         self.title("Cognitive Chess")
         self.geometry("600x620")
-        
-        # convert
-        convert_svg_to_png("board.svg", "board.png")
-        self.image = Image.open("board.png")
-        self.photo = ImageTk.PhotoImage(self.image)
         
         # GUI Components
         self.create_widgets(state)
@@ -58,12 +53,17 @@ class ChessBoard(tk.Tk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         
+        # convert
+        convert_svg_to_png("board.svg", "board.png")
+        self.image = Image.open("board.png")
+        self.photo = ImageTk.PhotoImage(self.image)
+        
         # Chess Board Display
         self.canvas = tk.Canvas(self, width=self.image.width, height=self.image.height)
         self.canvas.grid(row=0, column=1, sticky="nw")
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
 
-
+        
 
         # # label
         # self.entry = tk.Label(self, text=render_move_text(rec_moves),
@@ -102,7 +102,7 @@ class ChessBoard(tk.Tk):
         
         # Frame to display prompt/user input
         user_frame = tk.Frame(self)
-        user_frame.grid(row=1, column=0, sticky="nw")
+        user_frame.grid(row=1, column=0, sticky="nw")  
         
         # Label
         self.user_label = tk.Label(user_frame, text="User:")
@@ -173,8 +173,12 @@ class ChessBoard(tk.Tk):
 
     def play_next_move(self):
         global rec_moves
+        
         rec_moves += send_move(board, engine) + " "
         
+        MyChess(rec_moves)       
+        self.update_chess_board_display() # Update the chess board display
+            
         # Clear the existing content of the moves text widget
         self.moves_text.config(state="normal")  # Set state to normal to enable editing
         self.moves_text.delete("1.0", tk.END)   # Delete all content
@@ -201,6 +205,18 @@ class ChessBoard(tk.Tk):
     def _get_explanation_and_update(self, user_text):
         explanation = send_prompt(prepare(user_text, rec_moves), url_prompt)
         self.resp_text.insert(tk.END, f"ASSISTANT : {explanation}" + "\n")
+        
+    def update_chess_board_display(self):
+        # Clear the existing content of the canvas
+        self.canvas.delete("all")
+        
+        # Convert and load the updated board image
+        convert_svg_to_png("board.svg", "board.png")
+        self.image = Image.open("board.png")
+        self.photo = ImageTk.PhotoImage(self.image)
+    
+        # Update the canvas with the updated board image
+        self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
 
     # def get_explanation(self):
     #     self.update_text()
